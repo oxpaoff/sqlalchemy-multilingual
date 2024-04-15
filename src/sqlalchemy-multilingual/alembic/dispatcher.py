@@ -7,8 +7,12 @@ from mixins import TranslatableMixin
 
 @alembic.autogenerate.comparators.dispatch_for("table")
 def create_translation_models(
-        autogen_context, modify_ops,
-        schemaname, tablename, conn_table, metadata_table
+    autogen_context,
+    modify_ops,
+    schemaname,
+    tablename,
+    conn_table,
+    metadata_table
 ):
     Base = alembic.context.config.attributes["Base"]
     for mapper in Base.registry.mappers:
