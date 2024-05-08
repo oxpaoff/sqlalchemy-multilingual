@@ -1,11 +1,7 @@
-from setuptools import setup, find_packages
+from setuptools import setup, find_namespace_packages
 
 setup(
-    packages=find_packages(
-        where=[
-            "src/sqlalchemy-multilingual",
-            "src/sqlalchemy-multilingual/alembic"
-        ],
-        exclude=[".venv"]
-    ),
+    packages=find_namespace_packages(where='src'),
+    package_dir={'': 'src'},
+    include_package_data=True,
 )

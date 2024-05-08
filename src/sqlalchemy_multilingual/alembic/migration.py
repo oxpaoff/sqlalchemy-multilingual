@@ -2,8 +2,8 @@ from typing import Type
 
 from sqlalchemy.orm import DeclarativeBase
 
-from mixins import TranslatableMixin
-from models import create_model
+from sqlalchemy_multilingual.mixins import TranslatableMixin
+from sqlalchemy_multilingual.models import create_model
 
 
 def create_translation_models(base_model: Type[DeclarativeBase]) -> None:

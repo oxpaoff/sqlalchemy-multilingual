@@ -3,8 +3,8 @@ from typing import Type
 from sqlalchemy import ColumnElement, Select, and_, not_, or_
 from sqlalchemy.orm import contains_eager
 
-from exception import NoDefaultLocale
-from mixins import TranslatableMixin
+from sqlalchemy_multilingual.exception import NoDefaultLocale
+from sqlalchemy_multilingual.mixins import TranslatableMixin
 
 
 def select_i18n(

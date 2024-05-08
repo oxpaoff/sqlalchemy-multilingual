@@ -5,14 +5,22 @@ from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     DeclarativeBase,
     MappedColumn,
+    InstrumentedAttribute,
+    Relationship,
+    relationship
 )
 
-from constants import EXCLUDE_COLUMNS
-from exception import UnableToFindPrimaryKey
+from sqlalchemy_multilingual.constants import EXCLUDE_COLUMNS
+from sqlalchemy_multilingual.exception import UnableToFindPrimaryKey
 
 if TYPE_CHECKING:
     from mixins import TranslatableMixin
 
+def str_method(self: DeclarativeBase) -> str:
+    str_data = {}
+    for k in self.translation_fields.keys():
+        str_data[f"{k}_{self.locale.value.upper()}"] = getattr(self, k)
+    return str(str_data)
 
 def create_model(
     base_model: Type[DeclarativeBase],
@@ -37,6 +45,8 @@ def create_model(
         "object_id": Column(
             Integer, ForeignKey(object_id, ondelete="CASCADE")
         ),
+        "__str__": str_method,
+        "translation_fields": cls.translation_fields,
         **cls.translation_fields,
     }
     return type(name, (base_model,), attributes)
@@ -47,8 +57,9 @@ def get_pk_column(model: Type[DeclarativeBase]) -> Optional[str]:
     for attr_name in class_attrs:
         if attr_name in EXCLUDE_COLUMNS:
             continue
-
         if not attr_name.startswith("__") and not attr_name.startswith("_"):
             attr = getattr(model, attr_name)
             if isinstance(attr, MappedColumn) and attr.column.primary_key:
+                return attr_name
+            elif isinstance(attr, InstrumentedAttribute) and not isinstance(attr.property, Relationship) and attr.primary_key:
                 return attr_name
