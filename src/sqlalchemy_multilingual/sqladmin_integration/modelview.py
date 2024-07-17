@@ -65,7 +65,7 @@ class TranslatableModelView(ModelView):
             model=self.model,
             exclude=["translations"],
             session_maker=self.session_maker,
-            only=self._form_prop_names ,
+            only=self._form_prop_names,
             column_labels=self._column_labels,
             form_args=self.form_args,
             form_widget_args=self.form_widget_args,
@@ -77,19 +77,21 @@ class TranslatableModelView(ModelView):
         )
 
     async def insert_model(self, request: Request, data: dict) -> Any:
-        obj = await super().insert_model(request, data)
-        await self.insert_translations(obj, data)
+        data = await self.process_data(data)
+        obj = await super().insert_model(request, data["data"])
+        await self.insert_translations(obj, data["translation_data"])
         return obj
 
     async def update_model(self, request: Request, pk: str, data: dict) -> Any:
-        obj = await super().update_model(request, pk, data)
-        await self.update_translations(obj, data)
+        data = await self.process_data(data)
+        obj = await super().update_model(request, pk, data["data"])
+        await self.update_translations(obj, data["translation_data"])
         return obj
 
     async def insert_translations(self, obj: Any, data: dict) -> Any:
         async with self.session_maker(expire_on_commit=False) as session:
-            for field in obj.translation_fields.keys():
-                for locale in obj.locales._member_names_:
+            for locale in obj.locales._member_names_:
+                for field in obj.translation_fields.keys():
                     new_obj = obj.translation_model(object=obj, locale=locale)
                     setattr(new_obj, field, data.get(f"{field}_{locale}", ""))
                     session.add(new_obj)
@@ -97,10 +99,33 @@ class TranslatableModelView(ModelView):
             return obj
 
     async def update_translations(self, obj: Any, data: dict) -> Any:
+        locales = obj.locales._member_names_.copy()
         async with self.session_maker(expire_on_commit=False) as session:
             for translation in obj.translations:
                 for field in obj.translation_fields.keys():
                     setattr(translation, field, data.get(f"{field}_{translation.locale}", ""))
                     session.add(translation)
+                    locales.remove(translation.locale)
+
+            for locale in locales:
+                for field in obj.translation_fields.keys():
+                    new_obj = obj.translation_model(object=obj, locale=locale)
+                    setattr(new_obj, field, data.get(f"{field}_{locale}", ""))
+                    session.add(new_obj)
             await session.commit()
-            return obj
+        return obj
+
+    async def process_data(self, data: dict) -> dict:
+        translation_fields = self.model.translation_fields
+        translation_data = {}
+        for field in data.keys():
+            for translation_field in translation_fields.keys():
+                if field.startswith(translation_field):
+                    translation_data[field] = data[field]
+
+        for translation_field in translation_data.keys():
+            data.pop(translation_field)
+        return {
+            "data": data,
+            "translation_data": translation_data
+        }

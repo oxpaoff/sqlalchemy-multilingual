@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "sqlalchemy_multilingual"
-version = "0.0.22"
+version = "0.0.25"
 authors = [
     { name = "oxpaoff", email = "kosenkoviktor11@gmail.com" },
 ]
@@ -16,11 +16,11 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
-dependencies = [
-    "SQLAlchemy>=2.0.0",
-    "typing_extensions==4.6.3",
-    "sqladmin>=0.16.1"
-]
+
+[tool.poetry.dependencies]
+SQLAlchemy = ">=2.0.0"
+typing_extensions = "*"
+sqladmin = ">=0.16.1"
 
 [project.urls]
 "Homepage" = "https://github.com/oxpaoff/sqlalchemy-multilingual"
